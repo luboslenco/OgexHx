@@ -28,11 +28,11 @@ class OgexData extends Container {
 					case "Metric":
 						metrics.push(parseMetric(s));
 					case "GeometryNode":
-						geometryNodes.push(parseGeometryNode(s));
+						geometryNodes.push(parseGeometryNode(s, this));
 					case "LightNode":
-						lightNodes.push(parseLightNode(s));
+						lightNodes.push(parseLightNode(s, this));
 					case "CameraNode":
-						cameraNodes.push(parseCameraNode(s));
+						cameraNodes.push(parseCameraNode(s, this));
 					case "GeometryObject":
 						geometryObjects.push(parseGeometryObject(s));
 					case "LightObject":
@@ -47,6 +47,10 @@ class OgexData extends Container {
 		catch(ex:haxe.io.Eof) { }
 
 		file.close();
+	}
+
+	public function getNode(name:String):Node {
+		return null;
 	}
 
 	function readLine():Array<String> {
@@ -75,8 +79,9 @@ class OgexData extends Container {
 		return metric;
 	}
 
-	function parseGeometryNode(s:Array<String>):GeometryNode {
+	function parseGeometryNode(s:Array<String>, parent:Container):GeometryNode {
 		var n = new GeometryNode();
+		n.parent = parent;
 		n.ref = s[1];
 
 		while (true) {
@@ -92,11 +97,11 @@ class OgexData extends Container {
 				case "Transform":
 					n.transform = parseTransform(s);
 				case "GeometryNode":
-					n.geometryNodes.push(parseGeometryNode(s));
+					n.geometryNodes.push(parseGeometryNode(s, n));
 				case "LightNode":
-					n.lightNodes.push(parseLightNode(s));
+					n.lightNodes.push(parseLightNode(s, n));
 				case "CameraNode":
-					n.cameraNodes.push(parseCameraNode(s));
+					n.cameraNodes.push(parseCameraNode(s, n));
 				case "}":
 					break;
 			}
@@ -104,8 +109,9 @@ class OgexData extends Container {
 		return n;
 	}
 
-	function parseLightNode(s:Array<String>):LightNode {
+	function parseLightNode(s:Array<String>, parent:Container):LightNode {
 		var n = new LightNode();
+		n.parent = parent;
 		n.ref = s[1];
 
 		while (true) {
@@ -119,11 +125,11 @@ class OgexData extends Container {
 				case "Transform":
 					n.transform = parseTransform(s);
 				case "GeometryNode":
-					n.geometryNodes.push(parseGeometryNode(s));
+					n.geometryNodes.push(parseGeometryNode(s, n));
 				case "LightNode":
-					n.lightNodes.push(parseLightNode(s));
+					n.lightNodes.push(parseLightNode(s, n));
 				case "CameraNode":
-					n.cameraNodes.push(parseCameraNode(s));
+					n.cameraNodes.push(parseCameraNode(s, n));
 				case "}":
 					break;
 			}
@@ -131,8 +137,9 @@ class OgexData extends Container {
 		return n;
 	}
 
-	function parseCameraNode(s:Array<String>):CameraNode {
+	function parseCameraNode(s:Array<String>, parent:Container):CameraNode {
 		var n = new CameraNode();
+		n.parent = parent;
 		n.ref = s[1];
 
 		while (true) {
@@ -146,11 +153,11 @@ class OgexData extends Container {
 				case "Transform":
 					n.transform = parseTransform(s);
 				case "GeometryNode":
-					n.geometryNodes.push(parseGeometryNode(s));
+					n.geometryNodes.push(parseGeometryNode(s, n));
 				case "LightNode":
-					n.lightNodes.push(parseLightNode(s));
+					n.lightNodes.push(parseLightNode(s, n));
 				case "CameraNode":
-					n.cameraNodes.push(parseCameraNode(s));
+					n.cameraNodes.push(parseCameraNode(s, n));
 				case "}":
 					break;
 			}
@@ -373,6 +380,7 @@ class Container {
 
 class Node extends Container {
 
+	public var parent:Container;
 	public var ref:String;
 	public var name:String;
 	public var objectRefs:Array<String> = [];
