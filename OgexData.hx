@@ -5,6 +5,16 @@ using StringTools;
 // OpenGEX parser
 // http://opengex.org
 
+class Container {
+
+	public var name:String;
+	public var geometryNodes:Array<GeometryNode> = [];
+	public var lightNodes:Array<LightNode> = [];
+	public var cameraNodes:Array<CameraNode> = [];
+
+	public function new() {}
+}
+
 class OgexData extends Container {
 
 	public var metrics:Array<Metric> = [];
@@ -49,7 +59,38 @@ class OgexData extends Container {
 		file.close();
 	}
 
-	public function getNode(name:String):Node {
+	public function getGeometryNode(name:String):GeometryNode { 
+		var res:GeometryNode = null; 
+		traverseGeometryNodes(function(it:GeometryNode) { 
+			if (it.name == name) { res = it; }
+		});
+		return res; 
+	}
+
+	public function traverseGeometryNodes(callback:GeometryNode->Void) {
+		for (i in 0...geometryNodes.length) {
+			traverseGeometryNodesStep(geometryNodes[i], callback);
+		}
+	}
+	
+	function traverseGeometryNodesStep(node:GeometryNode, callback:GeometryNode->Void) {
+		callback(node);
+		for (i in 0...node.geometryNodes.length) {
+			traverseGeometryNodesStep(node.geometryNodes[i], callback);
+		}
+	}
+
+	public function getGeometryObject(ref:String):GeometryObject {
+		for (go in geometryObjects) {
+			if (go.ref == ref) return go;
+		}
+		return null;
+	}
+
+	public function getMaterial(ref:String):Material {
+		for (m in materials) {
+			if (m.ref == ref) return m;
+		}
 		return null;
 	}
 
@@ -355,7 +396,11 @@ class OgexData extends Container {
 		var sss = readLine2();
 		ss += sss.substr(0, sss.length - 2);
 		s = ss.split(",");
-		for (i in 0...s.length) t.values.push(Std.parseFloat(s[i]));
+		for (i in 0...s.length) {
+			var j = Std.int(i / 4);
+			var k = i % 4;
+			t.values.push(Std.parseFloat(s[j + k * 4]));
+		}
 		readLine2(); readLine2();
 		return t;
 	}
@@ -369,20 +414,10 @@ class Metric {
 	public function new() {}
 }
 
-class Container {
-
-	public var geometryNodes:Array<GeometryNode> = [];
-	public var lightNodes:Array<LightNode> = [];
-	public var cameraNodes:Array<CameraNode> = [];
-
-	public function new() {}
-}
-
 class Node extends Container {
 
 	public var parent:Container;
 	public var ref:String;
-	public var name:String;
 	public var objectRefs:Array<String> = [];
 	public var transform:Transform;
 
@@ -456,6 +491,13 @@ class Mesh {
 	public var indexArray:IndexArray;
 
 	public function new() {}
+
+	public function getArray(attrib:String):VertexArray {
+		for (va in vertexArrays) {
+			if (va.attrib == attrib) return va;
+		}
+		return null;
+	}
 }
 
 class VertexArray {
