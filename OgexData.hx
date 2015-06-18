@@ -1,4 +1,4 @@
-package ogexhx;
+package;
 import haxe.io.StringInput;
 using StringTools;
 
@@ -621,8 +621,8 @@ class OgexData extends Container {
 		return t;
 	}
 
-	function parseTime(s:Array<String>):Time {
-		var t = new Time();
+	function parseTime(s:Array<String>):OgexTime {
+		var t = new OgexTime();
 		while (true) {
 			s = readLine();
 
@@ -879,13 +879,13 @@ class Animation {
 class Track {
 
 	public var target:String;
-	public var time:Time;
+	public var time:OgexTime;
 	public var value:Value;
 
 	public function new() {}
 }
 
-class Time {
+class OgexTime {
 
 	public var key:Key;
 
